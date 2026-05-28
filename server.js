@@ -1,0 +1,69 @@
+require('dotenv').config();
+const express = require('express');
+const path = require('path');
+const connectDB = require('./config/db');
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const courseRoutes = require('./routes/courses');
+const videoRoutes = require('./routes/videos');
+const testRoutes = require('./routes/tests');
+const progressRoutes = require('./routes/progress');
+const adminRoutes = require('./routes/admin');
+const certificateRoutes = require('./routes/certificates');
+
+const app = express();
+
+// Connect to MongoDB
+connectDB();
+
+// Middleware
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/videos', videoRoutes);
+app.use('/api/tests', testRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/certificates', certificateRoutes);
+
+// SPA fallback - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err);
+  
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Fayl hajmi 500MB dan oshmasligi kerak!'
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: 'Fayl yuklashda xatolik: ' + err.message
+    });
+  }
+
+  res.status(500).json({
+    success: false,
+    message: 'Server xatosi yuz berdi.'
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`\n🚀 EduMOOC server ishga tushdi: http://localhost:${PORT}`);
+  console.log(`📚 API: http://localhost:${PORT}/api`);
+  console.log(`🔑 Admin: admin@gmail.com / admin04\n`);
+});
