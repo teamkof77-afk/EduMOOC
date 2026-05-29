@@ -417,7 +417,7 @@ async function renderAddTest() {
         questions.push({ question: text, options, correctAnswer: Math.min(correct, options.length - 1) });
       }
       if (questions.length === 0) {
-        showModal('Kamida 1 ta savol qo'shing', true);
+        showModal("Kamida 1 ta savol qo'shing", true);
         btn.disabled = false; btn.textContent = '📝 Testni saqlash';
         return;
       }
