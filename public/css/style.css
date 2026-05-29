@@ -292,7 +292,7 @@ label:first-child { margin-top: 0; }
 .test-option input[type="radio"] { width: auto; accent-color: var(--primary); }
 .test-option.selected { background: rgba(108,99,255,0.15); border-color: var(--primary); }
 
-.admin-layout { display: grid; grid-template-columns: 260px 1fr; padding-top: 70px; min-height: 100vh; }
+.admin-layout { display: block; padding-top: 70px; min-height: 100vh; }
 .admin-sidebar {
   background: linear-gradient(180deg, rgba(15,12,41,0.95), rgba(36,36,62,0.98));
   border-right: 1px solid var(--glass-border);
