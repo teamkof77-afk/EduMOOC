@@ -29,9 +29,13 @@ router.get('/verify/:number', async (req, res) => {
   }
 });
 
-router.get('/download/:courseId', auth, async (req, res) => {
+router.get('/download/:courseId', async (req, res) => {
   try {
-    const cert = await Certificate.findOne({ userId: req.user._id, courseId: req.params.courseId })
+    const token = req.query.token || req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ success: false, message: 'Avtorizatsiya talab qilinadi' });
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const cert = await Certificate.findOne({ userId: decoded.id, courseId: req.params.courseId })
       .populate('courseId', 'title category')
       .populate('userId', 'firstName lastName');
     if (!cert) return res.status(404).json({ success: false, message: 'Sertifikat topilmadi' });

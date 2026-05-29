@@ -3,13 +3,10 @@ require('dotenv').config();
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('✅ MongoDB ga muvaffaqiyatli ulandi');
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB ga muvaffaqiyatli ulandi');
   } catch (err) {
-    console.error('❌ MongoDB ga ulanishda xatolik:', err.message);
+    console.error('MongoDB ga ulanishda xatolik:', err.message);
     process.exit(1);
   }
 };
