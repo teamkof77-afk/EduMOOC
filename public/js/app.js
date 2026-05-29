@@ -120,7 +120,7 @@ export async function api(path, options = {}) {
 }
 
 function router() {
-  const hash = window.location.hash.replace('#', '') || '/';
+  const hash = window.location.hash.replace(/^#\/?/, '') || '/';
   const parts = hash.split('/');
   const base = parts[0];
 
