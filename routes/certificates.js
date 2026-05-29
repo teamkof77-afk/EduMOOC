@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const { auth } = require('../middleware/auth');
 const Certificate = require('../models/Certificate');
 const Course = require('../models/Course');
@@ -33,7 +34,6 @@ router.get('/download/:courseId', async (req, res) => {
   try {
     const token = req.query.token || req.header('Authorization')?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ success: false, message: 'Avtorizatsiya talab qilinadi' });
-    const jwt = require('jsonwebtoken');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const cert = await Certificate.findOne({ userId: decoded.id, courseId: req.params.courseId })
       .populate('courseId', 'title category')

@@ -13,9 +13,9 @@ router.get('/captcha', (req, res) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { firstName, lastName, phone, email, password } = req.body;
-    if (!req.session.captcha) {
-      return res.status(400).json({ success: false, message: 'CAPTCHA yuklanmadi, qayta urinib ko\'ring' });
+    const { firstName, lastName, phone, email, password, captcha } = req.body;
+    if (!req.session.captcha || captcha !== req.session.captcha) {
+      return res.status(400).json({ success: false, message: 'CAPTCHA noto\'g\'ri' });
     }
     const existing = await User.findOne({ $or: [{ phone }, { email }] });
     if (existing) {
@@ -51,9 +51,6 @@ router.post('/login', async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Parol noto‘g‘ri' });
-    }
-    if (user.role === 'admin' && (email !== 'admin@gmail.com' || password !== 'admin04')) {
-      return res.status(401).json({ success: false, message: 'Admin paroli noto‘g‘ri' });
     }
     user.lastLogin = new Date();
     await user.save();

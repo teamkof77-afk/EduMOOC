@@ -110,7 +110,7 @@ async function renderUsers() {
     const users = res.users || [];
     container.innerHTML = `
       <h2>👥 Foydalanuvchilar <span style="font-size:14px;color:var(--text-dim)">(${users.length} ta)</span></h2>
-      <div style="overflow-x:auto">
+      <div class="data-table-wrapper">
         <table class="data-table">
           <thead><tr>
             <th>Ism</th><th>Familiya</th><th>Email</th><th>Telefon</th><th>Rol</th><th>Qo'shilgan</th><th>Amallar</th>
@@ -118,19 +118,19 @@ async function renderUsers() {
           <tbody>
             ${users.map(u => `
               <tr>
-                <td>${u.firstName}</td>
+                <td><strong>${u.firstName}</strong></td>
                 <td>${u.lastName}</td>
                 <td>${u.email}</td>
                 <td>${u.phone || '-'}</td>
-                <td><select class="roleSelect" data-id="${u._id}" style="width:auto;padding:4px 8px;font-size:12px">
+                <td><select class="roleSelect" data-id="${u._id}" style="width:auto;padding:6px 12px;font-size:13px;border-radius:12px;background:rgba(255,255,255,0.05)">
                   <option value="student" ${u.role === 'student' ? 'selected' : ''}>Talaba</option>
                   <option value="teacher" ${u.role === 'teacher' ? 'selected' : ''}>O'qituvchi</option>
                   <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
                 </select></td>
-                <td style="font-size:12px;color:var(--text-dim)">${new Date(u.createdAt).toLocaleDateString('uz-UZ')}</td>
+                <td style="font-size:13px;color:var(--text-dim)">${new Date(u.createdAt).toLocaleDateString('uz-UZ')}</td>
                 <td>
                   <div class="actions">
-                    ${u.email !== 'admin@gmail.com' ? `<button class="btn btn-sm btn-danger deleteUser" data-id="${u._id}">O'chirish</button>` : '<span style="font-size:12px;color:var(--text-dim)">Asosiy admin</span>'}
+                    ${u.email !== 'admin@gmail.com' ? `<button class="btn btn-sm btn-danger deleteUser" data-id="${u._id}">O'chirish</button>` : '<span style="font-size:12px;color:var(--primary);font-weight:600">Asosiy admin</span>'}
                   </div>
                 </td>
               </tr>
@@ -171,17 +171,17 @@ async function renderCourses() {
     const courses = res.courses || [];
     container.innerHTML = `
       <h2>📚 Kurslar <span style="font-size:14px;color:var(--text-dim)">(${courses.length} ta)</span></h2>
-      <div style="overflow-x:auto">
+      <div class="data-table-wrapper">
         <table class="data-table">
           <thead><tr><th>Nomi</th><th>Kategoriya</th><th>Videolar</th><th>Testlar</th><th>Qo'shilgan</th><th>Amallar</th></tr></thead>
           <tbody>
             ${courses.map(c => `
               <tr>
                 <td><strong>${c.title}</strong></td>
-                <td><span class="badge" style="padding:2px 10px;border-radius:12px;background:rgba(108,99,255,0.15);color:var(--primary);font-size:12px">${c.category?.split(' ').slice(0, 2).join(' ') || 'N/A'}</span></td>
-                <td>${(c.videos || []).length}</td>
-                <td>${(c.tests || []).length}</td>
-                <td style="font-size:12px;color:var(--text-dim)">${new Date(c.createdAt).toLocaleDateString('uz-UZ')}</td>
+                <td><span class="badge" style="padding:4px 12px;border-radius:12px;background:rgba(108,99,255,0.15);color:var(--primary);font-size:13px;font-weight:600">${c.category?.split(' ').slice(0, 2).join(' ') || 'N/A'}</span></td>
+                <td><span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,0.05);border-radius:8px">${(c.videos || []).length} ta</span></td>
+                <td><span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,0.05);border-radius:8px">${(c.tests || []).length} ta</span></td>
+                <td style="font-size:13px;color:var(--text-dim)">${new Date(c.createdAt).toLocaleDateString('uz-UZ')}</td>
                 <td><button class="btn btn-sm btn-danger deleteCourse" data-id="${c._id}">O'chirish</button></td>
               </tr>
             `).join('')}

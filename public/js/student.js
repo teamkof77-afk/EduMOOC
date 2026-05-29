@@ -45,35 +45,26 @@ export async function showStudentDashboard() {
     const progressList = progressRes.progress || [];
     const user = getUser();
 
-    let categoryCards = categories.map(cat => {
-      const catCourses = courses.filter(c => c.category === cat.title);
-      return { ...cat, courses: catCourses, count: catCourses.length };
-    }).filter(c => c.count > 0);
+    const categoryMap = {
+      ai: 'Artificial Intelligence and Technologies',
+      programming: 'Programming and Data Processing',
+      marketing: 'Digital Marketing and Content Creation',
+      design: 'Design (Visual)'
+    };
 
-    let catsHtml = '';
-    if (categoryCards.length === 0) {
-      categoryCards = categories;
-      catsHtml = categoryCards.map(cat => `
-        <div class="category-card" data-category="${cat.id}" style="cursor:default;opacity:0.8">
+    let catsHtml = categories.map(cat => {
+      const engCat = categoryMap[cat.id] || cat.title;
+      const catCourses = courses.filter(c => c.category === engCat);
+      const count = catCourses.length;
+      return `
+        <div class="category-card" onclick="window.location.hash='#/student/course/${encodeURIComponent(engCat)}'">
           <div class="cat-icon">${cat.icon}</div>
           <h3>${cat.title}</h3>
           <p>${cat.desc}</p>
-          <span class="course-count">0 ta kurs</span>
+          <span class="course-count">${count} ta kurs</span>
         </div>
-      `).join('');
-    } else {
-      catsHtml = categoryCards.map(cat => {
-        const catType = cat.title;
-        return `
-          <div class="category-card" onclick="window.location.hash='#/student/course/${encodeURIComponent(catType)}'">
-            <div class="cat-icon">${cat.icon}</div>
-            <h3>${cat.title}</h3>
-            <p>${cat.desc}</p>
-            <span class="course-count">${cat.count} ta kurs</span>
-          </div>
-        `;
-      }).join('');
-    }
+      `;
+    }).join('');
 
     let progressHtml = '';
     if (progressList.length > 0) {
@@ -133,8 +124,8 @@ export async function showCourseDetail(courseIdOrCategory) {
     const allCourses = await api('/api/courses');
     if (!allCourses.success) { showModal('Kurslarni yuklashda xatolik', true); return; }
 
-    const isCategory = courseIdOrCategory.includes('Intellekt') || courseIdOrCategory.includes('Dasturlash') ||
-      courseIdOrCategory.includes('Marketing') || courseIdOrCategory.includes('Dizayn');
+    const isCategory = courseIdOrCategory.includes('Intelligence') || courseIdOrCategory.includes('Programming') ||
+      courseIdOrCategory.includes('Marketing') || courseIdOrCategory.includes('Design');
 
     if (isCategory) {
       courses = allCourses.courses.filter(c => c.category === courseIdOrCategory);
@@ -176,7 +167,8 @@ export async function showCourseDetail(courseIdOrCategory) {
                 'Artificial Intelligence and Technologies': '🤖',
                 'Programming and Data Processing': '💻',
                 'Digital Marketing and Content Creation': '📊',
-                'Design (Visual)': '🎨'
+                'Design (Visual)': '🎨',
+                'ai': '🤖', 'programming': '💻', 'marketing': '📊', 'design': '🎨'
               };
               return `
                 <div class="course-card" onclick="window.location.hash='#/student/video/${course._id}'">
