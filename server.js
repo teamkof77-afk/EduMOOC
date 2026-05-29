@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const session = require('express-session');
 const connectDB = require('./config/db');
 
 // Import routes
@@ -17,11 +18,20 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+// Session middleware (for CAPTCHA)
+app.use(session({
+  secret: process.env.JWT_SECRET || 'edumooc-secret-key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false, maxAge: 600000 }
+}));
+
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve static files
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes

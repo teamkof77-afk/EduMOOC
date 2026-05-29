@@ -7,22 +7,18 @@ const upload = require('../middleware/upload');
 const Video = require('../models/Video');
 const Course = require('../models/Course');
 
-// Upload a video (admin only)
 router.post('/upload', auth, adminOnly, upload.single('video'), async (req, res) => {
   try {
     const { title, description, courseId } = req.body;
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Video fayl kerak' });
-    }
+    if (!req.file) return res.status(400).json({ success: false, message: 'Video fayl kerak' });
     const video = new Video({
       title,
       description,
       courseId,
       videoUrl: `/uploads/${req.file.filename}`,
-      duration: 0 // later set after processing if needed
+      order: req.body.order || 0
     });
     await video.save();
-    // Add video reference to course
     await Course.findByIdAndUpdate(courseId, { $push: { videos: video._id } });
     res.status(201).json({ success: true, video });
   } catch (err) {
@@ -31,14 +27,14 @@ router.post('/upload', auth, adminOnly, upload.single('video'), async (req, res)
   }
 });
 
-// Stream video (public)
 router.get('/stream/:id', async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
-    if (!video) {
-      return res.status(404).json({ success: false, message: 'Video topilmadi' });
-    }
+    if (!video) return res.status(404).json({ success: false, message: 'Video topilmadi' });
     const videoPath = path.join(__dirname, '..', 'public', video.videoUrl);
+    if (!fs.existsSync(videoPath)) {
+      return res.status(404).json({ success: false, message: 'Video fayl topilmadi' });
+    }
     const stat = fs.statSync(videoPath);
     const fileSize = stat.size;
     const range = req.headers.range;
@@ -46,6 +42,7 @@ router.get('/stream/:id', async (req, res) => {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      if (start >= fileSize) return res.status(416).json({ success: false, message: 'Range noto\'g\'ri' });
       const chunksize = (end - start) + 1;
       const file = fs.createReadStream(videoPath, { start, end });
       const head = {
@@ -67,6 +64,16 @@ router.get('/stream/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Video oqishda xato' });
+  }
+});
+
+router.get('/course/:courseId', async (req, res) => {
+  try {
+    const videos = await Video.find({ courseId: req.params.courseId }).sort({ order: 1 });
+    res.json({ success: true, videos });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Videolar olishda xato' });
   }
 });
 

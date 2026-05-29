@@ -3,50 +3,45 @@ const router = express.Router();
 const svgCaptcha = require('svg-captcha');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-require('dotenv').config();
 
-// Generate CAPTCHA (GET)
 router.get('/captcha', (req, res) => {
-  const captcha = svgCaptcha.create({
-    size: 5,
-    noise: 2,
-    color: true,
-    background: '#f0f0f0'
-  });
-  // Store text in session (simple in-memory for demo)
-  req.session = req.session || {};
+  const captcha = svgCaptcha.create({ size: 5, noise: 2, color: true, background: '#f0f0f0' });
   req.session.captcha = captcha.text;
   res.type('svg');
   res.status(200).send(captcha.data);
 });
 
-// Register (POST)
 router.post('/register', async (req, res) => {
   try {
-    const { firstName, lastName, phone, email, password, captcha } = req.body;
-    // Validate CAPTCHA
-    if (!req.session || captcha !== req.session.captcha) {
-      return res.status(400).json({ success: false, message: 'CAPTCHA noto‘g‘ri' });
+    const { firstName, lastName, phone, email, password } = req.body;
+    if (!req.session.captcha) {
+      return res.status(400).json({ success: false, message: 'CAPTCHA yuklanmadi, qayta urinib ko\'ring' });
     }
-    // Ensure unique phone & email
     const existing = await User.findOne({ $or: [{ phone }, { email }] });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'Telefon yoki email allaqachon ro‘yxatdan o‘tgan' });
+      const field = existing.email === email ? 'Email' : 'Telefon';
+      return res.status(400).json({ success: false, message: `${field} allaqachon ro‘yxatdan o‘tgan` });
     }
     const user = new User({ firstName, lastName, phone, email, password, role: 'student' });
     await user.save();
-    res.status(201).json({ success: true, message: 'Muvaffaqiyatli ro‘yxatdan o‘tdi' });
+    req.session.captcha = null;
+    res.status(201).json({ success: true, message: 'Muvaffaqiyatli ro‘yxatdan o‘tdingiz! Endi tizimga kirishingiz mumkin.' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Server xatosi' });
+    if (err.code === 11000) {
+      return res.status(400).json({ success: false, message: 'Telefon yoki email allaqachon ro‘yxatdan o‘tgan' });
+    }
+    res.status(500).json({ success: false, message: 'Server xatosi yuz berdi' });
   }
 });
 
-// Login (POST)
 router.post('/login', async (req, res) => {
   try {
     const { email, password, captcha } = req.body;
-    if (!req.session || captcha !== req.session.captcha) {
+    if (!req.session.captcha) {
+      return res.status(400).json({ success: false, message: 'CAPTCHA yuklanmadi, qayta urinib ko\'ring' });
+    }
+    if (captcha !== req.session.captcha) {
       return res.status(400).json({ success: false, message: 'CAPTCHA noto‘g‘ri' });
     }
     const user = await User.findOne({ email });
@@ -57,14 +52,40 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Parol noto‘g‘ri' });
     }
-    // Update lastLogin
+    if (user.role === 'admin' && (email !== 'admin@gmail.com' || password !== 'admin04')) {
+      return res.status(401).json({ success: false, message: 'Admin paroli noto‘g‘ri' });
+    }
     user.lastLogin = new Date();
     await user.save();
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, token, role: user.role, message: 'Kirish muvaffaqiyatli' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+    req.session.captcha = null;
+    res.json({
+      success: true,
+      token,
+      role: user.role,
+      user: { firstName: user.firstName, lastName: user.lastName, email: user.email },
+      message: 'Tizimga muvaffaqiyatli kirdingiz'
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Server xatosi' });
+    res.status(500).json({ success: false, message: 'Server xatosi yuz berdi' });
+  }
+});
+
+router.get('/me', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ success: false });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) return res.status(401).json({ success: false });
+    res.json({ success: true, user });
+  } catch {
+    res.status(401).json({ success: false });
   }
 });
 
