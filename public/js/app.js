@@ -141,7 +141,8 @@ function router() {
   if (token) {
     const role = getRole();
     if (role === 'admin') { window.location.hash = '#/admin'; return; }
-    window.location.hash = '#/role'; return;
+    if (role === 'teacher') { window.location.hash = '#/teacher'; return; }
+    window.location.hash = '#/student'; return;
   }
   showLanding();
 }
