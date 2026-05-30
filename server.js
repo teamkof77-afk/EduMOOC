@@ -18,6 +18,13 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+// Ensure uploads directory exists
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Session middleware (for CAPTCHA)
 app.use(session({
   secret: process.env.JWT_SECRET || 'edumooc-secret-key',

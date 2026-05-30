@@ -31,7 +31,7 @@ router.get('/stream/:id', async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
     if (!video) return res.status(404).json({ success: false, message: 'Video topilmadi' });
-    const videoPath = path.join(__dirname, '..', 'public', video.videoUrl);
+    const videoPath = path.join(__dirname, '..', 'public', video.videoUrl.startsWith('/') ? video.videoUrl.substring(1) : video.videoUrl);
     if (!fs.existsSync(videoPath)) {
       return res.status(404).json({ success: false, message: 'Video fayl topilmadi' });
     }

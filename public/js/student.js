@@ -464,7 +464,7 @@ export async function showVideoPlayer(courseId, videoId) {
       <div class="video-page">
         <div class="video-main">
           <div class="video-player-wrapper">
-            <video id="eduVideo" src="/api/videos/stream/${currentVideo._id}" controls></video>
+            <video id="eduVideo" src="${currentVideo.videoUrl?.startsWith('http') ? currentVideo.videoUrl : `/api/videos/stream/${currentVideo._id}`}" controls></video>
           </div>
           <div class="video-info">
             <h2>${currentVideo.title || 'Video dars'}</h2>
