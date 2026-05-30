@@ -337,9 +337,10 @@ export async function showStudentDashboard() {
   }
 }
 
-export async function showCourseDetail(courseIdOrCategory) {
+export async function showCourseDetail(courseIdOrCategoryEncoded) {
   showLoading();
   try {
+    const courseIdOrCategory = decodeURIComponent(courseIdOrCategoryEncoded);
     let courses, categoryTitle;
     const allCourses = await api('/api/courses');
     if (!allCourses.success) { showModal('Kurslarni yuklashda xatolik', true); return; }
