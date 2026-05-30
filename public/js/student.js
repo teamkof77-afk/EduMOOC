@@ -450,19 +450,14 @@ export async function showVideoPlayer(courseId, videoId) {
       return testForVideo.some(tf => tf._id.toString() === tid.toString()) && t.passed;
     }) : true;
 
-    function getEmbedUrl(url) {
-      if (!url) return '';
-      if (url.includes('youtube.com/watch?v=')) {
-        const id = url.split('v=')[1].split('&')[0];
-        return `https://www.youtube.com/embed/${id}`;
-      }
-      if (url.includes('youtu.be/')) {
-        const id = url.split('youtu.be/')[1].split('?')[0];
-        return `https://www.youtube.com/embed/${id}`;
-      }
-      return url;
-    }
     const isYoutube = (currentVideo.videoUrl || '').includes('youtube.com') || (currentVideo.videoUrl || '').includes('youtu.be');
+
+    function getYoutubeId(url) {
+      if (!url) return null;
+      if (url.includes('youtube.com/watch?v=')) return url.split('v=')[1].split('&')[0];
+      if (url.includes('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0];
+      return null;
+    }
 
     render(`
       <div class="navbar">
@@ -479,7 +474,9 @@ export async function showVideoPlayer(courseId, videoId) {
         <div class="video-main">
           <div class="video-player-wrapper">
             ${isYoutube ? `
-              <iframe id="eduVideoIframe" src="${getEmbedUrl(currentVideo.videoUrl)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:var(--radius-lg)"></iframe>
+              <div id="ytPlayerContainer" style="width:100%;aspect-ratio:16/9;border-radius:var(--radius-lg);overflow:hidden">
+                <div id="eduYoutubePlayer"></div>
+              </div>
             ` : `
               <video id="eduVideo" src="${currentVideo.videoUrl?.startsWith('http') ? currentVideo.videoUrl : `/api/videos/stream/${currentVideo._id}`}" controls></video>
             `}
@@ -594,14 +591,80 @@ export async function showVideoPlayer(courseId, videoId) {
     if (!isYoutube) {
       initVideoPlayer(currentVideo, courseId, progress);
     } else {
-      // For YouTube, mark as completed immediately to allow progress (until YT API integration)
-      api('/api/progress/video', {
-        method: 'POST',
-        body: JSON.stringify({
-          videoId: currentVideo._id, courseId,
-          watchedDuration: 1, totalDuration: 1, lastPosition: 1, completed: true
-        })
-      }).catch(() => {});
+      // YouTube API Integration
+      const setupYT = () => {
+        let maxYTWatched = vidProgress ? vidProgress.watchedDuration : 0;
+        let isSaving = false;
+
+        new YT.Player('eduYoutubePlayer', {
+          height: '100%',
+          width: '100%',
+          videoId: getYoutubeId(currentVideo.videoUrl),
+          playerVars: { 'autoplay': 0, 'modestbranding': 1, 'rel': 0 },
+          events: {
+            'onReady': (event) => {
+              if (vidProgress && vidProgress.lastPosition > 0) {
+                event.target.seekTo(vidProgress.lastPosition);
+              }
+              // Progress tracking interval
+              setInterval(() => {
+                const currentTime = event.target.getCurrentTime();
+                const duration = event.target.getDuration();
+                
+                if (currentTime > maxYTWatched + 2 && duration - currentTime > 1) {
+                  event.target.seekTo(maxYTWatched);
+                } else if (currentTime > maxYTWatched) {
+                  maxYTWatched = currentTime;
+                  // Save progress periodically
+                  if (!isSaving && Math.round(currentTime) % 10 === 0) {
+                    isSaving = true;
+                    api('/api/progress/video', {
+                      method: 'POST',
+                      body: JSON.stringify({
+                        videoId: currentVideo._id, courseId,
+                        watchedDuration: maxYTWatched, 
+                        totalDuration: duration || 0, 
+                        lastPosition: currentTime, 
+                        completed: duration > 0 && currentTime >= duration - 3
+                      })
+                    }).finally(() => { setTimeout(() => { isSaving = false; }, 2000); });
+                  }
+                }
+              }, 1000);
+            },
+            'onStateChange': (event) => {
+              if (event.data === YT.PlayerState.ENDED) {
+                api('/api/progress/video', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    videoId: currentVideo._id, courseId,
+                    watchedDuration: event.target.getDuration(), 
+                    totalDuration: event.target.getDuration(), 
+                    lastPosition: event.target.getDuration(), 
+                    completed: true
+                  })
+                }).then(() => {
+                  showModal('Video dars yakunlandi! Endi test topshirishingiz mumkin.');
+                  showVideoPlayer(courseId, currentVideo._id); // Refresh to unlock buttons
+                });
+              }
+            }
+          }
+        });
+      };
+
+      if (window.YT && window.YT.Player) {
+        setupYT();
+      } else {
+        if (!document.getElementById('ytApiScript')) {
+          const tag = document.createElement('script');
+          tag.id = 'ytApiScript';
+          tag.src = "https://www.youtube.com/iframe_api";
+          const firstScriptTag = document.getElementsByTagName('script')[0];
+          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+        window.onYouTubeIframeAPIReady = setupYT;
+      }
     }
   } catch (err) {
     console.error(err);
