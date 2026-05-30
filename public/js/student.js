@@ -496,41 +496,52 @@ export async function showVideoPlayer(courseId, videoId) {
         </div>
         <div class="playlist">
           <h3>📋 Darslar ro'yxati</h3>
-          ${videos.map((v, i) => {
-            const vp = progress.videosWatched.find(p => (p.videoId?._id || p.videoId) === v._id);
-            const isActive = v._id === currentVideo._id;
-            const isCompleted = vp?.completed;
-            const vidTests = tests.filter(t => t.videoId?.toString() === v._id.toString());
-            const testOk = vidTests.length > 0 ? progress.testsCompleted.some(t => {
-              const tid = t.testId?._id || t.testId;
-              return vidTests.some(vt => vt._id.toString() === tid.toString()) && t.passed;
-            }) : true;
-            const done = isCompleted && testOk;
-            return `
-              <div class="playlist-item ${isActive ? 'active' : ''}" data-videoid="${v._id}">
-                <div class="pl-num">${i + 1}</div>
-                <div class="pl-info">
-                  <h4>${v.title || `Dars ${i + 1}`}</h4>
-                  <span>${done ? '✅ Tugallangan' : (vp ? `${Math.round((vp.watchedDuration / vp.totalDuration) * 100) || 0}%` : 'Ko\'rilmagan')}</span>
+          ${(() => {
+            let html = '';
+            let previousDone = true;
+            videos.forEach((v, i) => {
+              const vp = progress.videosWatched.find(p => (p.videoId?._id || p.videoId) === v._id);
+              const isActive = v._id === currentVideo._id;
+              const isCompleted = vp?.completed;
+              const vidTests = tests.filter(t => t.videoId?.toString() === v._id.toString());
+              const testOk = vidTests.length > 0 ? progress.testsCompleted.some(t => {
+                const tid = t.testId?._id || t.testId;
+                return vidTests.some(vt => vt._id.toString() === tid.toString()) && t.passed;
+              }) : true;
+              
+              const done = isCompleted && testOk;
+              const locked = !previousDone;
+              
+              html += `
+                <div class="playlist-item ${isActive ? 'active' : ''} ${locked ? 'locked' : ''}" data-videoid="${locked ? '' : v._id}" style="${locked ? 'opacity:0.5;cursor:not-allowed' : ''}">
+                  <div class="pl-num">${locked ? '🔒' : i + 1}</div>
+                  <div class="pl-info">
+                    <h4>${v.title || `Dars ${i + 1}`}</h4>
+                    <span>${locked ? 'Qulflangan' : (done ? '✅ Tugallangan' : (vp ? `${Math.round((vp.watchedDuration / vp.totalDuration) * 100) || 0}%` : 'Ko\'rilmagan'))}</span>
+                  </div>
+                  ${done ? '<span class="pl-check">✅</span>' : ''}
                 </div>
-                ${done ? '<span class="pl-check">✅</span>' : ''}
-              </div>
-            `;
-          }).join('')}
-          
-          ${tests.filter(t => !t.videoId).map((t, idx) => {
-            const isDone = progress.testsCompleted.some(pt => (pt.testId?._id || pt.testId)?.toString() === t._id.toString() && pt.passed);
-            return `
-              <div class="playlist-item final-test-item" data-testid="${t._id}" style="border: 1px dashed var(--primary); margin-top: 10px; background: rgba(108, 99, 255, 0.05)">
-                <div class="pl-num">🏆</div>
-                <div class="pl-info">
-                  <h4>${t.title || 'Yakuniy test'}</h4>
-                  <span>${isDone ? '✅ Muvaffaqiyatli topshirildi' : 'Yakuniy imtihon'}</span>
+              `;
+              previousDone = done;
+            });
+
+            // Final tests
+            tests.filter(t => !t.videoId).forEach(t => {
+              const isDone = progress.testsCompleted.some(pt => (pt.testId?._id || pt.testId)?.toString() === t._id.toString() && pt.passed);
+              const locked = !previousDone;
+              html += `
+                <div class="playlist-item final-test-item ${locked ? 'locked' : ''}" data-testid="${locked ? '' : t._id}" style="border: 1px dashed var(--primary); margin-top: 10px; background: rgba(108, 99, 255, 0.05); ${locked ? 'opacity:0.5;cursor:not-allowed' : ''}">
+                  <div class="pl-num">${locked ? '🔒' : '🏆'}</div>
+                  <div class="pl-info">
+                    <h4>${t.title || 'Yakuniy test'}</h4>
+                    <span>${locked ? 'Barcha darslarni tugating' : (isDone ? '✅ Muvaffaqiyatli topshirildi' : 'Yakuniy imtihon')}</span>
+                  </div>
+                  ${isDone ? '<span class="pl-check">✅</span>' : ''}
                 </div>
-                ${isDone ? '<span class="pl-check">✅</span>' : ''}
-              </div>
-            `;
-          }).join('')}
+              `;
+            });
+            return html;
+          })()}
         </div>
       </div>
     `);
@@ -539,22 +550,46 @@ export async function showVideoPlayer(courseId, videoId) {
 
     document.querySelectorAll('.playlist-item[data-videoid]').forEach(el => {
       el.addEventListener('click', () => {
-        window.location.hash = `#/student/video/${courseId}/${el.dataset.videoid}`;
+        if (el.dataset.videoid) {
+          window.location.hash = `#/student/video/${courseId}/${el.dataset.videoid}`;
+        }
       });
     });
 
     document.querySelectorAll('.playlist-item[data-testid]').forEach(el => {
       el.addEventListener('click', () => {
-        window.location.hash = `#/student/test/${courseId}/${el.dataset.testid}`;
+        if (el.dataset.testid) {
+          window.location.hash = `#/student/test/${courseId}/${el.dataset.testid}`;
+        }
       });
     });
 
     const prevBtn = document.getElementById('prevVideoBtn');
     if (prevBtn) prevBtn.addEventListener('click', () => window.location.hash = `#/student/video/${courseId}/${videos[currentIndex - 1]._id}`);
+    
     const nextBtn = document.getElementById('nextVideoBtn');
-    if (nextBtn) nextBtn.addEventListener('click', () => window.location.hash = `#/student/video/${courseId}/${videos[currentIndex + 1]._id}`);
+    if (nextBtn) {
+      const currentVideoDone = vidProgress && vidProgress.completed;
+      if (!currentVideoDone || !testPassed) {
+        nextBtn.style.opacity = '0.5';
+        nextBtn.style.pointerEvents = 'none';
+        nextBtn.title = 'Keyingi darsga o\'tish uchun ushbu darsni ko\'rib bo\'lishingiz va testini topshirishingiz shart';
+      }
+      nextBtn.addEventListener('click', () => {
+        window.location.hash = `#/student/video/${courseId}/${videos[currentIndex + 1]._id}`;
+      });
+    }
+
     const testBtn = document.getElementById('takeTestBtn');
-    if (testBtn && !testPassed) testBtn.addEventListener('click', () => window.location.hash = `#/student/test/${courseId}/${testForVideo[0]._id}`);
+    if (testBtn && !testPassed) {
+      const currentVideoDone = vidProgress && vidProgress.completed;
+      if (!currentVideoDone) {
+        testBtn.style.opacity = '0.5';
+        testBtn.style.pointerEvents = 'none';
+        testBtn.title = 'Test topshirish uchun avval videoni to\'liq ko\'rib chiqing';
+      }
+      testBtn.addEventListener('click', () => window.location.hash = `#/student/test/${courseId}/${testForVideo[0]._id}`);
+    }
 
     if (!isYoutube) {
       initVideoPlayer(currentVideo, courseId, progress);
