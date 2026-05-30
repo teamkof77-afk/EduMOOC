@@ -9,13 +9,22 @@ const Course = require('../models/Course');
 
 router.post('/upload', auth, adminOnly, upload.single('video'), async (req, res) => {
   try {
-    const { title, description, courseId } = req.body;
-    if (!req.file) return res.status(400).json({ success: false, message: 'Video fayl kerak' });
+    const { title, description, courseId, externalUrl } = req.body;
+    let finalUrl;
+    
+    if (req.file) {
+      finalUrl = `/uploads/${req.file.filename}`;
+    } else if (externalUrl) {
+      finalUrl = externalUrl;
+    } else {
+      return res.status(400).json({ success: false, message: 'Video fayl yoki havola (link) kerak' });
+    }
+
     const video = new Video({
       title,
       description,
       courseId,
-      videoUrl: `/uploads/${req.file.filename}`,
+      videoUrl: finalUrl,
       order: req.body.order || 0
     });
     await video.save();

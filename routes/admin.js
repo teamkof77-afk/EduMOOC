@@ -68,7 +68,7 @@ router.put('/users/:id/role', auth, adminOnly, async (req, res) => {
 
 router.get('/courses', auth, adminOnly, async (req, res) => {
   try {
-    const courses = await Course.find().populate('videos').sort({ createdAt: -1 });
+    const courses = await Course.find().populate('videos').populate('tests').sort({ createdAt: -1 });
     res.json({ success: true, courses });
   } catch (err) {
     console.error(err);

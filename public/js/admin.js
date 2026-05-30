@@ -278,8 +278,18 @@ async function renderAddVideo() {
             <textarea name="description" placeholder="Video haqida"></textarea>
           </div>
           <div class="form-group">
-            <label>Video fayl</label>
-            <input type="file" name="video" accept="video/mp4,video/webm,video/ogg" required style="padding:8px" />
+            <label>Video manbasi</label>
+            <div style="display:flex;gap:12px;margin-bottom:8px">
+              <label style="flex:1;cursor:pointer"><input type="radio" name="sourceType" value="file" checked /> Fayl yuklash</label>
+              <label style="flex:1;cursor:pointer"><input type="radio" name="sourceType" value="link" /> Video havola (Link)</label>
+            </div>
+            <div id="fileSource">
+              <input type="file" name="video" accept="video/mp4,video/webm,video/ogg" style="padding:8px" />
+              <p style="font-size:11px;color:var(--text-dim);margin-top:4px">⚠️ Diqqat: Fayl yuklashda Railway serveri restart bo'lsa, videolar o'chib ketishi mumkin. Link (URL) orqali yuklash tavsiya etiladi.</p>
+            </div>
+            <div id="linkSource" style="display:none">
+              <input type="text" name="externalUrl" placeholder="https://example.com/video.mp4 yoki YouTube link" />
+            </div>
           </div>
           <div class="form-group">
             <label>Tartib raqami</label>
@@ -302,7 +312,7 @@ async function renderAddVideo() {
       });
       const result = await res.json();
       if (result.success) {
-        showModal('Video muvaffaqiyatli yuklandi!');
+        showModal('Video muvaffaqiyatli qo\'shildi!', false, () => window.location.hash = '#/admin/manage-videos');
         e.target.reset();
         btn.disabled = false; btn.textContent = '📤 Videoni yuklash';
       } else {
@@ -310,6 +320,24 @@ async function renderAddVideo() {
         btn.disabled = false; btn.textContent = '📤 Videoni yuklash';
       }
     });
+
+    // Toggle between file and link inputs
+    document.getElementsByName('sourceType').forEach(r => {
+      r.addEventListener('change', (e) => {
+        const isFile = e.target.value === 'file';
+        document.getElementById('fileSource').style.display = isFile ? 'block' : 'none';
+        document.getElementById('linkSource').style.display = isFile ? 'none' : 'block';
+        if (isFile) {
+          e.target.form.querySelector('input[name="video"]').required = true;
+          e.target.form.querySelector('input[name="externalUrl"]').required = false;
+        } else {
+          e.target.form.querySelector('input[name="video"]').required = false;
+          e.target.form.querySelector('input[name="externalUrl"]').required = true;
+        }
+      });
+    });
+    // Set initial required state
+    document.querySelector('input[name="video"]').required = true;
   } catch {
     container.innerHTML = '<p style="color:red">Xatolik yuz berdi</p>';
   }

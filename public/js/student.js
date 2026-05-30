@@ -450,6 +450,20 @@ export async function showVideoPlayer(courseId, videoId) {
       return testForVideo.some(tf => tf._id.toString() === tid.toString()) && t.passed;
     }) : true;
 
+    function getEmbedUrl(url) {
+      if (!url) return '';
+      if (url.includes('youtube.com/watch?v=')) {
+        const id = url.split('v=')[1].split('&')[0];
+        return `https://www.youtube.com/embed/${id}`;
+      }
+      if (url.includes('youtu.be/')) {
+        const id = url.split('youtu.be/')[1].split('?')[0];
+        return `https://www.youtube.com/embed/${id}`;
+      }
+      return url;
+    }
+    const isYoutube = (currentVideo.videoUrl || '').includes('youtube.com') || (currentVideo.videoUrl || '').includes('youtu.be');
+
     render(`
       <div class="navbar">
         <div class="navbar-inner">
@@ -464,7 +478,11 @@ export async function showVideoPlayer(courseId, videoId) {
       <div class="video-page">
         <div class="video-main">
           <div class="video-player-wrapper">
-            <video id="eduVideo" src="${currentVideo.videoUrl?.startsWith('http') ? currentVideo.videoUrl : `/api/videos/stream/${currentVideo._id}`}" controls></video>
+            ${isYoutube ? `
+              <iframe id="eduVideoIframe" src="${getEmbedUrl(currentVideo.videoUrl)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:var(--radius-lg)"></iframe>
+            ` : `
+              <video id="eduVideo" src="${currentVideo.videoUrl?.startsWith('http') ? currentVideo.videoUrl : `/api/videos/stream/${currentVideo._id}`}" controls></video>
+            `}
           </div>
           <div class="video-info">
             <h2>${currentVideo.title || 'Video dars'}</h2>
@@ -518,7 +536,18 @@ export async function showVideoPlayer(courseId, videoId) {
     const testBtn = document.getElementById('takeTestBtn');
     if (testBtn && !testPassed) testBtn.addEventListener('click', () => window.location.hash = `#/student/test/${courseId}/${testForVideo[0]._id}`);
 
-    initVideoPlayer(currentVideo, courseId, progress);
+    if (!isYoutube) {
+      initVideoPlayer(currentVideo, courseId, progress);
+    } else {
+      // For YouTube, mark as completed immediately to allow progress (until YT API integration)
+      api('/api/progress/video', {
+        method: 'POST',
+        body: JSON.stringify({
+          videoId: currentVideo._id, courseId,
+          watchedDuration: 1, totalDuration: 1, lastPosition: 1, completed: true
+        })
+      }).catch(() => {});
+    }
   } catch (err) {
     console.error(err);
     showModal('Video yuklashda xatolik', true);
