@@ -152,6 +152,14 @@ export function initVideoPlayer(video, courseId, progress) {
     saveProgress(true);
     maxWatched = videoEl.duration;
     localStorage.removeItem(storageKey);
+    // UI Unlock
+    const testBtn = document.getElementById('takeTestBtn');
+    if (testBtn) {
+      testBtn.style.opacity = '1';
+      testBtn.style.pointerEvents = 'auto';
+      testBtn.title = '';
+      testBtn.classList.add('btn-primary');
+    }
   });
 
   videoEl.addEventListener('error', () => {

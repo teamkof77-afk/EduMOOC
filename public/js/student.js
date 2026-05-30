@@ -645,7 +645,16 @@ export async function showVideoPlayer(courseId, videoId) {
                   })
                 }).then(() => {
                   showModal('Video dars yakunlandi! Endi test topshirishingiz mumkin.');
-                  showVideoPlayer(courseId, currentVideo._id); // Refresh to unlock buttons
+                  // Manually unlock the test button immediately
+                  const testBtn = document.getElementById('takeTestBtn');
+                  if (testBtn) {
+                    testBtn.style.opacity = '1';
+                    testBtn.style.pointerEvents = 'auto';
+                    testBtn.title = '';
+                    testBtn.classList.add('btn-primary');
+                  }
+                  // Full UI refresh after a short delay to ensure DB consistency
+                  setTimeout(() => showVideoPlayer(courseId, currentVideo._id), 1000);
                 });
               }
             }
