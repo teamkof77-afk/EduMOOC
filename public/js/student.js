@@ -625,7 +625,7 @@ export async function showVideoPlayer(courseId, videoId) {
                         watchedDuration: maxYTWatched, 
                         totalDuration: duration || 0, 
                         lastPosition: currentTime, 
-                        completed: duration > 0 && currentTime >= duration - 3
+                        completed: duration > 0 && currentTime >= duration * 0.95
                       })
                     }).finally(() => { setTimeout(() => { isSaving = false; }, 2000); });
                   }

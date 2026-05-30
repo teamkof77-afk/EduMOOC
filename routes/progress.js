@@ -47,6 +47,11 @@ router.post('/video', auth, async (req, res) => {
     } else {
       progress.videosWatched.push({ videoId, watchedDuration, totalDuration, lastPosition, completed: completed || false });
     }
+    const targetIdx = videoIndex >= 0 ? videoIndex : progress.videosWatched.length - 1;
+    if (completed || (totalDuration > 0 && watchedDuration >= totalDuration * 0.95)) {
+      if (progress.videosWatched[targetIdx]) progress.videosWatched[targetIdx].completed = true;
+    }
+    
     // Recalculate overall progress (videos + tests)
     const totalVideos = await Video.countDocuments({ courseId });
     const totalTests = await Test.countDocuments({ courseId });

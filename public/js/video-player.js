@@ -69,7 +69,7 @@ export function initVideoPlayer(video, courseId, progress) {
       lastPosition: videoEl.currentTime,
       watchedDuration: maxWatched,
       totalDuration: videoEl.duration || 0,
-      completed: completed || (videoEl.duration > 0 && videoEl.currentTime >= videoEl.duration - 0.5)
+      completed: completed || (videoEl.duration > 0 && videoEl.currentTime >= videoEl.duration * 0.95)
     };
     localStorage.setItem(storageKey, JSON.stringify(data));
     if (getToken()) {
