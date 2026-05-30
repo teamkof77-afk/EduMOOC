@@ -77,4 +77,25 @@ router.get('/course/:courseId', async (req, res) => {
   }
 });
 
+router.delete('/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const video = await Video.findById(req.params.id);
+    if (!video) return res.status(404).json({ success: false, message: 'Video topilmadi' });
+    
+    // Delete file if it exists and is local
+    if (video.videoUrl.startsWith('/uploads/')) {
+      const filePath = path.join(__dirname, '..', 'public', video.videoUrl.substring(1));
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+    
+    await Course.findByIdAndUpdate(video.courseId, { $pull: { videos: video._id } });
+    await Video.findByIdAndDelete(req.params.id);
+    
+    res.json({ success: true, message: 'Video o\'chirildi' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Xatolik yuz berdi' });
+  }
+});
+
 module.exports = router;

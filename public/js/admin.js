@@ -35,8 +35,9 @@ export async function showAdminPanel(section = 'stats') {
         <a class="menu-item ${section === 'stats' ? 'active' : ''}" data-section="stats">📊 Statistika</a>
         <a class="menu-item ${section === 'users' ? 'active' : ''}" data-section="users">👥 Foydalanuvchilar</a>
         <a class="menu-item ${section === 'courses' ? 'active' : ''}" data-section="courses">📚 Kurslar</a>
+        <a class="menu-item ${section === 'manage-videos' ? 'active' : ''}" data-section="manage-videos">🎬 Videolar boshqaruvi</a>
         <a class="menu-item ${section === 'add-course' ? 'active' : ''}" data-section="add-course">➕ Yangi kurs</a>
-        <a class="menu-item ${section === 'add-video' ? 'active' : ''}" data-section="add-video">🎬 Video qo'shish</a>
+        <a class="menu-item ${section === 'add-video' ? 'active' : ''}" data-section="add-video">📹 Video qo'shish</a>
         <a class="menu-item ${section === 'add-test' ? 'active' : ''}" data-section="add-test">📝 Test qo'shish</a>
         <div style="border-top:1px solid var(--glass-border);margin-top:20px;padding-top:12px">
           <a class="menu-item" id="backToSite">← Saytga qaytish</a>
@@ -67,6 +68,7 @@ export async function showAdminPanel(section = 'stats') {
   else if (section === 'add-course') renderAddCourse();
   else if (section === 'add-video') renderAddVideo();
   else if (section === 'add-test') renderAddTest();
+  else if (section === 'manage-videos') renderManageVideos();
 }
 
 async function renderStats() {
@@ -434,5 +436,58 @@ async function renderAddTest() {
     });
   } catch {
     container.innerHTML = '<p style="color:red">Xatolik yuz berdi</p>';
+  }
+}
+
+async function renderManageVideos() {
+  const container = document.getElementById('adminContent');
+  if (!container) return;
+  container.innerHTML = '<h2>🎬 Videolar boshqaruvi</h2><div class="loading"><div class="spinner"></div></div>';
+  try {
+    const res = await api('/api/admin/courses');
+    const courses = res.courses || [];
+    let allVideos = [];
+    courses.forEach(c => {
+      (c.videos || []).forEach(v => {
+        allVideos.push({ ...v, courseTitle: c.title });
+      });
+    });
+
+    container.innerHTML = `
+      <h2>🎬 Videolar boshqaruvi <span style="font-size:14px;color:var(--text-dim)">(${allVideos.length} ta)</span></h2>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Sarlavha</th><th>Kurs</th><th>URL / Fayl</th><th>Amallar</th></tr></thead>
+          <tbody>
+            ${allVideos.map(v => `
+              <tr>
+                <td><strong>${v.title}</strong></td>
+                <td><span style="font-size:13px">${v.courseTitle}</span></td>
+                <td style="font-family:monospace;font-size:11px;color:var(--text-dim)">${v.videoUrl}</td>
+                <td><button class="btn btn-sm btn-danger deleteVideo" data-id="${v._id}">O'chirish</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${allVideos.length === 0 ? '<p style="text-align:center;padding:40px;color:var(--text-dim)">Hozircha videolar yo\'q</p>' : ''}
+    `;
+
+    document.querySelectorAll('.deleteVideo').forEach(btn => {
+      btn.addEventListener('click', () => {
+        showConfirm('Videoni o\'chirish', 'Bu darsni butunlay o\'chirmoqchimisiz?', async () => {
+          const res = await api(`/api/videos/${btn.dataset.id}`, { method: 'DELETE' });
+          if (res.success) {
+            showModal('Video o\'chirildi');
+            renderManageVideos();
+          } else {
+            showModal(res.message || 'Xatolik yuz berdi', true);
+          }
+        });
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = '<p style="color:red">Videolar yuklanmadi</p>';
   }
 }
