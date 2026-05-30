@@ -27,7 +27,9 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
   storage,
-  limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 524288000 }, // 500MB default
+  limits: { 
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) > 1000000 ? parseInt(process.env.MAX_FILE_SIZE) : 1073741824 // 1GB default if env is missing or too small
+  },
   fileFilter
 });
 
