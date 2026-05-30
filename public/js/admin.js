@@ -432,7 +432,8 @@ async function renderAddTest() {
       btn.disabled = true; btn.textContent = 'Saqlanmoqda...';
       const formData = new FormData(e.target);
       const courseId = formData.get('courseId');
-      const videoId = formData.get('videoId');
+      let videoId = formData.get('videoId');
+      if (videoId === '') videoId = null;
       const title = formData.get('title');
       const passingScore = parseInt(formData.get('passingScore')) || 70;
       const questions = [];
