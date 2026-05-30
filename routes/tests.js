@@ -70,4 +70,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.delete('/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const test = await Test.findById(req.params.id);
+    if (!test) return res.status(404).json({ success: false, message: 'Test topilmadi' });
+    await Course.findByIdAndUpdate(test.courseId, { $pull: { tests: test._id } });
+    await Test.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Test o\'chirildi' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Xatolik yuz berdi' });
+  }
+});
+
 module.exports = router;
