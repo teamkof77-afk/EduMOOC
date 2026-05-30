@@ -85,9 +85,16 @@ export async function showStudentDashboard() {
 
     render(`
       <div class="dashboard">
+        <!-- NAVBAR -->
         <div class="navbar">
           <div class="navbar-inner">
-            <div class="brand"><span>Edu</span><span>MOOC</span></div>
+            <a class="brand" href="#/student" style="text-decoration:none"><span>Edu</span><span>MOOC</span></a>
+            <div class="sd-nav-links">
+              <a class="sd-nav-link active" href="#/student">Bosh sahifa</a>
+              <a class="sd-nav-link" onclick="document.getElementById('sdCourses').scrollIntoView({behavior:'smooth'})">Kurslar</a>
+              <a class="sd-nav-link" onclick="document.getElementById('sdBlog').scrollIntoView({behavior:'smooth'})">Blog</a>
+              <a class="sd-nav-link" onclick="document.getElementById('sdAbout').scrollIntoView({behavior:'smooth'})">Biz haqimizda</a>
+            </div>
             <div class="nav-right">
               <span class="user-info"><strong>${user?.firstName || ''}</strong> | Talaba</span>
               <button class="btn btn-sm btn-outline" id="certificatesBtn">🏆 Sertifikatlar</button>
@@ -95,22 +102,235 @@ export async function showStudentDashboard() {
             </div>
           </div>
         </div>
-        <div class="container">
-          <div class="dashboard-header">
-            <h2>📚 Kurslar</h2>
-            <p>Yo'nalishni tanlang va bilim olishni boshlang</p>
+
+        <!-- SECTION 1: HERO BANNER -->
+        <section class="sd-hero">
+          <div class="sd-hero-overlay"></div>
+          <div class="sd-hero-content">
+            <div class="sd-hero-badge">🎓 O'zbekistondagi #1 Onlayn Ta'lim Platformasi</div>
+            <h1>ZAMONAVIY KASBLARNI<br>O'RGANING —<br><span class="sd-hero-accent">KELAJAKNI QURING</span></h1>
+            <p>Sun'iy intellekt, dasturlash, marketing va dizayn yo'nalishlari bo'yicha professional kurslar. Real loyihalar, sertifikatlar va karyera imkoniyatlari.</p>
+            <div class="sd-hero-actions">
+              <button class="btn btn-lg sd-hero-btn" onclick="document.getElementById('sdCourses').scrollIntoView({behavior:'smooth'})">Kurslarni ko'rish →</button>
+              <button class="btn btn-lg btn-outline" id="heroAboutBtn">Biz haqimizda</button>
+            </div>
+            <div class="sd-hero-stats">
+              <div class="sd-hs"><span class="sd-hs-num">10,000+</span><span class="sd-hs-label">Talabalar</span></div>
+              <div class="sd-hs-sep"></div>
+              <div class="sd-hs"><span class="sd-hs-num">50+</span><span class="sd-hs-label">Kurslar</span></div>
+              <div class="sd-hs-sep"></div>
+              <div class="sd-hs"><span class="sd-hs-num">4</span><span class="sd-hs-label">Yo'nalish</span></div>
+              <div class="sd-hs-sep"></div>
+              <div class="sd-hs"><span class="sd-hs-num">95%</span><span class="sd-hs-label">Muvaffaqiyat</span></div>
+            </div>
           </div>
-          <div class="categories-grid">${catsHtml || '<p style="color:var(--text-dim);text-align:center">Hozircha kurslar mavjud emas</p>'}</div>
-          ${progressHtml ? `<div class="dashboard-header" style="padding-top:20px"><h2>📊 Davom etayotgan kurslar</h2></div><div class="courses-grid">${progressHtml}</div>` : ''}
-        </div>
+          <div class="sd-hero-visual">
+            <div class="sd-hero-orb sd-orb1"></div>
+            <div class="sd-hero-orb sd-orb2"></div>
+            <div class="sd-hero-float-cards">
+              <div class="sd-fc sd-fc1"><span>🤖</span> AI & ML</div>
+              <div class="sd-fc sd-fc2"><span>💻</span> Dasturlash</div>
+              <div class="sd-fc sd-fc3"><span>📊</span> Marketing</div>
+              <div class="sd-fc sd-fc4"><span>🎨</span> Dizayn</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: KURSLAR (Courses) -->
+        <section class="sd-section" id="sdCourses">
+          <div class="container">
+            <div class="sd-section-header">
+              <div class="sd-section-tag">📚 Yo'nalishlar</div>
+              <h2 class="sd-section-title">Kurslar yo'nalishlari</h2>
+              <p class="sd-section-sub">Qaysi sohani o'rganmoqchisiz? Yo'nalishni tanlang va bilim olishni boshlang</p>
+            </div>
+            <div class="categories-grid">${catsHtml || '<p style="color:var(--text-dim);text-align:center">Hozircha kurslar mavjud emas</p>'}</div>
+            ${progressHtml ? `
+              <div class="sd-section-header" style="padding-top:40px">
+                <div class="sd-section-tag">📊 Jarayondagi</div>
+                <h2 class="sd-section-title">Davom etayotgan kurslar</h2>
+              </div>
+              <div class="courses-grid">${progressHtml}</div>
+            ` : ''}
+          </div>
+        </section>
+
+        <!-- SECTION 3: BLOG / YANGILIKLAR -->
+        <section class="sd-section sd-section-alt" id="sdBlog">
+          <div class="container">
+            <div class="sd-section-header">
+              <div class="sd-section-tag">📰 Blog</div>
+              <h2 class="sd-section-title">Yangiliklar va maqolalar</h2>
+              <p class="sd-section-sub">IT sohasidagi eng so'nggi yangiliklar va foydali maqolalar</p>
+            </div>
+            <div class="sd-blog-grid">
+              <div class="sd-blog-card">
+                <div class="sd-blog-img" style="background:linear-gradient(135deg,rgba(108,99,255,0.3),rgba(0,210,255,0.2))">
+                  <div class="sd-blog-img-icon">🤖</div>
+                </div>
+                <div class="sd-blog-body">
+                  <div class="sd-blog-meta">
+                    <span class="sd-blog-tag">Yangiliklar</span>
+                    <span class="sd-blog-date">📅 28-may, 2025</span>
+                    <span class="sd-blog-views">👁 146</span>
+                  </div>
+                  <h3>Sun'iy intellekt: SI gallyutsinatsiyasi nima va undan qanday qochish kerak?</h3>
+                  <p>ChatGPT va boshqa SI tizimlari nega noto'g'ri ma'lumot beradi? Real misollar va xatolarni kamaytirish usullari...</p>
+                  <span class="sd-blog-link">Batafsil →</span>
+                </div>
+              </div>
+              <div class="sd-blog-card">
+                <div class="sd-blog-img" style="background:linear-gradient(135deg,rgba(255,107,107,0.3),rgba(255,217,61,0.2))">
+                  <div class="sd-blog-img-icon">🎨</div>
+                </div>
+                <div class="sd-blog-body">
+                  <div class="sd-blog-meta">
+                    <span class="sd-blog-tag sd-tag-design">Dizayn</span>
+                    <span class="sd-blog-date">📅 23-may, 2025</span>
+                    <span class="sd-blog-views">👁 55</span>
+                  </div>
+                  <h3>Sun'iy intellekt davrida grafik dizayn holati qanday?</h3>
+                  <p>SI grafik dizaynni yo'q qilyaptimi yoki yangi imkoniyat yaratyaptimi? Grafik dizayn kelajagi...</p>
+                  <span class="sd-blog-link">Batafsil →</span>
+                </div>
+              </div>
+              <div class="sd-blog-card">
+                <div class="sd-blog-img" style="background:linear-gradient(135deg,rgba(0,210,160,0.3),rgba(108,99,255,0.2))">
+                  <div class="sd-blog-img-icon">💻</div>
+                </div>
+                <div class="sd-blog-body">
+                  <div class="sd-blog-meta">
+                    <span class="sd-blog-tag sd-tag-prog">Dasturlash</span>
+                    <span class="sd-blog-date">📅 20-may, 2025</span>
+                    <span class="sd-blog-views">👁 89</span>
+                  </div>
+                  <h3>To'g'ri prompt yozish: SI'dan samarali foydalanish qo'llanmasi</h3>
+                  <p>To'g'ri prompt orqali SI'dan samarali foydalanib, ish unumdorligini oshirish yo'llari...</p>
+                  <span class="sd-blog-link">Batafsil →</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: BIZ HAQIMIZDA -->
+        <section class="sd-section" id="sdAbout">
+          <div class="container">
+            <div class="sd-section-header">
+              <div class="sd-section-tag">🏢 Biz haqimizda</div>
+              <h2 class="sd-section-title">"EduMOOC" bu —</h2>
+            </div>
+            <div class="sd-about-grid">
+              <div class="sd-about-card">
+                <div class="sd-about-icon" style="background:linear-gradient(135deg,#6C63FF22,#6C63FF44)">🏛️</div>
+                <p>Dasturlash, dizayn va marketing kabi zamonaviy kasblarni o'rgatiladigan <strong>innovatsion ta'lim platformasi</strong>.</p>
+              </div>
+              <div class="sd-about-card">
+                <div class="sd-about-icon" style="background:linear-gradient(135deg,#00D2FF22,#00D2FF44)">🏠</div>
+                <p>Zamonaviy kasblar yordamida insonlar hayotini yaxshilovchi va <strong>kelajakka bo'lgan ishonchni mustahkamlovchi</strong> maskan.</p>
+              </div>
+              <div class="sd-about-card">
+                <div class="sd-about-icon" style="background:linear-gradient(135deg,#FF6B6B22,#FF6B6B44)">👥</div>
+                <p>Bir vaqtning o'zida <strong>10,000 dan ortiq o'quvchilar</strong> va 50 dan ortiq katta jamoani bir maskanga yig'a olgan ta'lim va innovatsiya markazi.</p>
+              </div>
+            </div>
+            <!-- Photo Gallery -->
+            <div class="sd-gallery">
+              <div class="sd-gallery-item" style="background:linear-gradient(135deg,rgba(108,99,255,0.2),rgba(0,210,255,0.15))">
+                <div class="sd-gallery-placeholder">🎓<br><span>Ta'lim jarayoni</span></div>
+              </div>
+              <div class="sd-gallery-item" style="background:linear-gradient(135deg,rgba(0,210,255,0.2),rgba(0,210,160,0.15))">
+                <div class="sd-gallery-placeholder">💻<br><span>Amaliy mashg'ulotlar</span></div>
+              </div>
+              <div class="sd-gallery-item" style="background:linear-gradient(135deg,rgba(255,107,107,0.2),rgba(255,217,61,0.15))">
+                <div class="sd-gallery-placeholder">🏆<br><span>Sertifikat topshiriq</span></div>
+              </div>
+              <div class="sd-gallery-item" style="background:linear-gradient(135deg,rgba(255,107,157,0.2),rgba(108,99,255,0.15))">
+                <div class="sd-gallery-placeholder">🤝<br><span>Jamoa ishlari</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: NEGA BIZDA O'QISH KERAK -->
+        <section class="sd-section sd-section-alt" id="sdFeatures">
+          <div class="container">
+            <div class="sd-section-header">
+              <div class="sd-section-tag">✨ Afzalliklar</div>
+              <h2 class="sd-section-title">Nima uchun "EduMOOC"da o'qish kerak?</h2>
+            </div>
+            <div class="sd-features-grid">
+              <div class="sd-feature-card">
+                <div class="sd-feature-icon" style="background:linear-gradient(135deg,#6C63FF,#8B5CF6)">🖥️</div>
+                <h3>Bepul platforma</h3>
+                <p>Barcha kurslardan foydalanish bepul. 24/7 formatda istalgan qurilmadan kiring va o'rganing.</p>
+              </div>
+              <div class="sd-feature-card">
+                <div class="sd-feature-icon" style="background:linear-gradient(135deg,#00D2FF,#00B4D8)">⭐</div>
+                <h3>Sifatli ta'lim</h3>
+                <p>Doimiy yangilanib boradigan kurslar va katta tajribaga ega ustozlar. Real loyihalar asosida o'rganasiz.</p>
+              </div>
+              <div class="sd-feature-card">
+                <div class="sd-feature-icon" style="background:linear-gradient(135deg,#00d2a0,#00b894)">⚡</div>
+                <h3>Doimiy musobaqalar</h3>
+                <p>Dasturlash, dizayn va marketing sohalari bo'yicha haftalik sovrinli musobaqalar va hackathonlar.</p>
+              </div>
+              <div class="sd-feature-card">
+                <div class="sd-feature-icon" style="background:linear-gradient(135deg,#FF6B6B,#ee5a24)">🎯</div>
+                <h3>Bepul mahorat darslari</h3>
+                <p>Soha mutaxassislari bilan doimiy o'tkaziladigan bepul master-klasslar va ochiq darslar.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 6: FOOTER -->
+        <footer class="sd-footer">
+          <div class="container">
+            <div class="sd-footer-grid">
+              <div class="sd-footer-brand">
+                <div class="sd-footer-logo"><span style="color:var(--primary)">Edu</span><span style="color:var(--secondary)">MOOC</span></div>
+                <p>O'zbekistondagi zamonaviy online ta'lim platformasi. Professional kurslar, sertifikatlar va karyera imkoniyatlari.</p>
+              </div>
+              <div class="sd-footer-col">
+                <h4>Platforma</h4>
+                <a onclick="document.getElementById('sdCourses').scrollIntoView({behavior:'smooth'})">Kurslar</a>
+                <a onclick="window.location.hash='#/student/certificates'">Sertifikatlar</a>
+                <a onclick="document.getElementById('sdBlog').scrollIntoView({behavior:'smooth'})">Blog</a>
+              </div>
+              <div class="sd-footer-col">
+                <h4>Yo'nalishlar</h4>
+                <a>Sun'iy Intellekt</a>
+                <a>Dasturlash</a>
+                <a>Marketing</a>
+                <a>Dizayn</a>
+              </div>
+              <div class="sd-footer-col">
+                <h4>Bog'lanish</h4>
+                <a>📧 info@edumooc.uz</a>
+                <a>📞 +998 90 000 00 00</a>
+                <a>📍 Toshkent, O'zbekiston</a>
+              </div>
+            </div>
+            <div class="sd-footer-bottom">
+              <span>© 2025 EduMOOC. Barcha huquqlar himoyalangan.</span>
+            </div>
+          </div>
+        </footer>
       </div>
     `);
+
+    // Event listeners
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.clear();
       window.location.hash = '#/';
     });
     const certBtn = document.getElementById('certificatesBtn');
     if (certBtn) certBtn.addEventListener('click', () => window.location.hash = '#/student/certificates');
+    const heroAboutBtn = document.getElementById('heroAboutBtn');
+    if (heroAboutBtn) heroAboutBtn.addEventListener('click', () => {
+      document.getElementById('sdAbout').scrollIntoView({behavior:'smooth'});
+    });
   } catch (err) {
     console.error(err);
     render('<p style="text-align:center;padding:60px;color:red">Xatolik yuz berdi</p>');
