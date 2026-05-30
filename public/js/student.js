@@ -517,15 +517,35 @@ export async function showVideoPlayer(courseId, videoId) {
               </div>
             `;
           }).join('')}
+          
+          ${tests.filter(t => !t.videoId).map((t, idx) => {
+            const isDone = progress.testsCompleted.some(pt => (pt.testId?._id || pt.testId)?.toString() === t._id.toString() && pt.passed);
+            return `
+              <div class="playlist-item final-test-item" data-testid="${t._id}" style="border: 1px dashed var(--primary); margin-top: 10px; background: rgba(108, 99, 255, 0.05)">
+                <div class="pl-num">🏆</div>
+                <div class="pl-info">
+                  <h4>${t.title || 'Yakuniy test'}</h4>
+                  <span>${isDone ? '✅ Muvaffaqiyatli topshirildi' : 'Yakuniy imtihon'}</span>
+                </div>
+                ${isDone ? '<span class="pl-check">✅</span>' : ''}
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
     `);
     document.getElementById('backToCourse').addEventListener('click', () => window.location.hash = '#/student');
     document.getElementById('logoutBtn3').addEventListener('click', () => { localStorage.clear(); window.location.hash = '#/'; });
 
-    document.querySelectorAll('.playlist-item').forEach(el => {
+    document.querySelectorAll('.playlist-item[data-videoid]').forEach(el => {
       el.addEventListener('click', () => {
         window.location.hash = `#/student/video/${courseId}/${el.dataset.videoid}`;
+      });
+    });
+
+    document.querySelectorAll('.playlist-item[data-testid]').forEach(el => {
+      el.addEventListener('click', () => {
+        window.location.hash = `#/student/test/${courseId}/${el.dataset.testid}`;
       });
     });
 
